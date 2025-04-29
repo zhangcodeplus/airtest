@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>新建文章 - 我的博客</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        .admin-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/admin">后台管理</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/new">新建文章</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/posts">文章列表</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="admin-container">
+        
+<div class="container">
+    <h1>新建文章</h1>
+    
+    <form id="articleForm" method="POST" action="/api/articles">
+        <div class="mb-3">
+            <label for="title" class="form-label">标题</label>
+            <input type="text" class="form-control" id="title" name="title" value="新建文章" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="slug" class="form-label">URL 别名</label>
+            <input type="text" class="form-control" id="slug" name="slug" value="" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="content" class="form-label">内容</label>
+            <textarea id="content" name="content"></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">同步到平台</label>
+            <div class="platform-sync">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="wechat" name="platforms[]" value="wechat">
+                    <label class="form-check-label" for="wechat">微信公众号</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="zhihu" name="platforms[]" value="zhihu">
+                    <label class="form-check-label" for="zhihu">知乎</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="xiaohongshu" name="platforms[]" value="xiaohongshu">
+                    <label class="form-check-label" for="xiaohongshu">小红书</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <button type="submit" class="btn btn-primary">保存</button>
+            <button type="button" class="btn btn-success" id="publishBtn">发布</button>
+            <button type="button" class="btn btn-secondary" id="previewBtn">预览</button>
+        </div>
+    </form>
+</div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+<script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+<script>
+    tinymce.init({
+        selector: '#content',
+        height: 500,
+        plugins: [
+            'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+            'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+            'insertdatetime', 'media', 'table', 'help', 'wordcount'
+        ],
+        toolbar: 'undo redo | blocks | ' +
+            'bold italic backcolor | alignleft aligncenter ' +
+            'alignright alignjustify | bullist numlist outdent indent | ' +
+            'removeformat | help',
+        content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; font-size: 14px; }'
+    });
+
+    document.getElementById('articleForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const platforms = Array.from(document.querySelectorAll('input[name="platforms[]"]:checked')).map(cb => cb.value);
+        
+        try {
+            const response = await fetch('/api/articles', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    title: formData.get('title'),
+                    slug: formData.get('slug'),
+                    content: tinymce.get('content').getContent(),
+                    platforms: platforms
+                })
+            });
+            
+            if (response.ok) {
+                alert('文章保存成功！');
+                window.location.href = '/admin/posts/';
+            } else {
+                alert('保存失败，请重试');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('保存失败，请重试');
+        }
+    });
+
+    document.getElementById('publishBtn').addEventListener('click', async () => {
+        const formData = new FormData(document.getElementById('articleForm'));
+        const platforms = Array.from(document.querySelectorAll('input[name="platforms[]"]:checked')).map(cb => cb.value);
+        
+        try {
+            const response = await fetch('/api/articles/publish', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    title: formData.get('title'),
+                    slug: formData.get('slug'),
+                    content: tinymce.get('content').getContent(),
+                    platforms: platforms
+                })
+            });
+            
+            if (response.ok) {
+                alert('文章发布成功！');
+                window.location.href = '/admin/posts/';
+            } else {
+                alert('发布失败，请重试');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('发布失败，请重试');
+        }
+    });
+
+    document.getElementById('previewBtn').addEventListener('click', () => {
+        const content = tinymce.get('content').getContent();
+        const previewWindow = window.open('', '_blank');
+        previewWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>预览 - ${document.getElementById('title').value}</title>
+                <link rel="stylesheet" href="/css/main.css">
+            </head>
+            <body>
+                <div class="container">
+                    <h1>${document.getElementById('title').value}</h1>
+                    <div class="content">
+                        ${content}
+                    </div>
+                </div>
+            </body>
+            </html>
+        `);
+    });
+</script>
+
+</body>
+</html> 

@@ -1,0 +1,19 @@
+{{ define "main" }}
+<div class="container">
+    <h1>{{ .Title }}</h1>
+    <div class="posts">
+        {{ range .Pages }}
+        <article class="post">
+            <h2><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
+            <div class="post-meta">
+                <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2006-01-02" }}</time>
+            </div>
+            <div class="post-summary">
+                {{ .Summary }}
+            </div>
+            <a href="{{ .RelPermalink }}" class="read-more">阅读更多</a>
+        </article>
+        {{ end }}
+    </div>
+</div>
+{{ end }} 

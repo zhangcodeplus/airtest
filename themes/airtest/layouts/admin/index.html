@@ -1,0 +1,28 @@
+{{ define "title" }}后台管理 - {{ .Site.Title }}{{ end }}
+
+{{ define "main" }}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">文章统计</h5>
+                <p class="card-text">
+                    总文章数: {{ len .Site.RegularPages }}<br>
+                    草稿数: {{ len (where .Site.RegularPages "Draft" true) }}
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">快速操作</h5>
+                <div class="d-grid gap-2">
+                    <a href="/admin/new" class="btn btn-primary">新建文章</a>
+                    <a href="/admin/posts" class="btn btn-secondary">管理文章</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{ end }} 

@@ -1,0 +1,151 @@
+{{ define "title" }}{{ if .Params.isNew }}新建文章{{ else }}编辑文章{{ end }} - {{ .Site.Title }}{{ end }}
+
+{{ define "main" }}
+<div class="container">
+    <h1>{{ if .Params.isNew }}新建文章{{ else }}编辑文章{{ end }}</h1>
+    
+    <form id="articleForm" method="POST" action="/api/articles">
+        <div class="mb-3">
+            <label for="title" class="form-label">标题</label>
+            <input type="text" class="form-control" id="title" name="title" value="{{ .Title }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="slug" class="form-label">URL 别名</label>
+            <input type="text" class="form-control" id="slug" name="slug" value="{{ .Slug }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="content" class="form-label">内容</label>
+            <textarea id="content" name="content">{{ .Content }}</textarea>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">同步到平台</label>
+            <div class="platform-sync">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="wechat" name="platforms[]" value="wechat">
+                    <label class="form-check-label" for="wechat">微信公众号</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="zhihu" name="platforms[]" value="zhihu">
+                    <label class="form-check-label" for="zhihu">知乎</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="xiaohongshu" name="platforms[]" value="xiaohongshu">
+                    <label class="form-check-label" for="xiaohongshu">小红书</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <button type="submit" class="btn btn-primary">保存</button>
+            <button type="button" class="btn btn-success" id="publishBtn">发布</button>
+            <button type="button" class="btn btn-secondary" id="previewBtn">预览</button>
+        </div>
+    </form>
+</div>
+{{ end }}
+
+{{ define "scripts" }}
+<script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+<script>
+    tinymce.init({
+        selector: '#content',
+        height: 500,
+        plugins: [
+            'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+            'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+            'insertdatetime', 'media', 'table', 'help', 'wordcount'
+        ],
+        toolbar: 'undo redo | blocks | ' +
+            'bold italic backcolor | alignleft aligncenter ' +
+            'alignright alignjustify | bullist numlist outdent indent | ' +
+            'removeformat | help',
+        content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; font-size: 14px; }'
+    });
+
+    document.getElementById('articleForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const platforms = Array.from(document.querySelectorAll('input[name="platforms[]"]:checked')).map(cb => cb.value);
+        
+        try {
+            const response = await fetch('/api/articles', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    title: formData.get('title'),
+                    slug: formData.get('slug'),
+                    content: tinymce.get('content').getContent(),
+                    platforms: platforms
+                })
+            });
+            
+            if (response.ok) {
+                alert('文章保存成功！');
+                window.location.href = '/admin/posts/';
+            } else {
+                alert('保存失败，请重试');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('保存失败，请重试');
+        }
+    });
+
+    document.getElementById('publishBtn').addEventListener('click', async () => {
+        const formData = new FormData(document.getElementById('articleForm'));
+        const platforms = Array.from(document.querySelectorAll('input[name="platforms[]"]:checked')).map(cb => cb.value);
+        
+        try {
+            const response = await fetch('/api/articles/publish', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    title: formData.get('title'),
+                    slug: formData.get('slug'),
+                    content: tinymce.get('content').getContent(),
+                    platforms: platforms
+                })
+            });
+            
+            if (response.ok) {
+                alert('文章发布成功！');
+                window.location.href = '/admin/posts/';
+            } else {
+                alert('发布失败，请重试');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('发布失败，请重试');
+        }
+    });
+
+    document.getElementById('previewBtn').addEventListener('click', () => {
+        const content = tinymce.get('content').getContent();
+        const previewWindow = window.open('', '_blank');
+        previewWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>预览 - ${document.getElementById('title').value}</title>
+                <link rel="stylesheet" href="/css/main.css">
+            </head>
+            <body>
+                <div class="container">
+                    <h1>${document.getElementById('title').value}</h1>
+                    <div class="content">
+                        ${content}
+                    </div>
+                </div>
+            </body>
+            </html>
+        `);
+    });
+</script>
+{{ end }} 

@@ -64,7 +64,7 @@ func main() {
 	}
 
 	if *daemon {
-		// 后台运行模式
+		// 后台运行模式 调试
 		cmd := exec.Command(os.Args[0])
 		cmd.Start()
 		fmt.Printf("Server started in background with PID %d\n", cmd.Process.Pid)

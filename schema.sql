@@ -1,0 +1,15 @@
+-- 文章表
+CREATE TABLE IF NOT EXISTS articles (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 创建更新时间触发器
+CREATE TRIGGER IF NOT EXISTS update_articles_timestamp 
+AFTER UPDATE ON articles
+BEGIN
+  UPDATE articles SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+END; 

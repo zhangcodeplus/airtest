@@ -1,0 +1,24 @@
+name = "airtest"
+main = "src/index.js"
+compatibility_date = "2024-02-20"
+compatibility_flags = ["nodejs_compat"]
+
+# 本地开发配置
+[dev]
+port = 8787
+
+# D1 数据库配置
+[[d1_databases]]
+binding = "DB"
+database_name = "airtest"
+database_id = "local"
+
+# KV 命名空间配置
+[[kv_namespaces]]
+binding = "AIRTEST_KV"
+id = "local"
+
+# 资源绑定配置
+[assets]
+binding = "ASSETS"
+directory = "./public" 
